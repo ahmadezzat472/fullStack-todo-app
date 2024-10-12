@@ -11,3 +11,12 @@ export const registerSchema = yup.object({
         .required("password is required")
         .min(6, "password should be at-least 6 characters")
 }).required();
+
+export const LoginSchema = yup.object({
+    identifier: yup.string()
+        .required("email is required")
+        .matches(/^[^@ ]+@[^@ ]+\.[^@ .]{2,}$/, "emai not valid"),
+    password: yup.string()
+        .required("password is required")
+        .min(6, "password should be at-least 6 characters")
+}).required();

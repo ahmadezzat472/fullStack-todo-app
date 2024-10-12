@@ -1,7 +1,8 @@
+import TodoPage from "./Todo"
 
 const HomePage = () => {
     return (
-        <div>index</div>
+        <TodoPage />
     )
 }
 
