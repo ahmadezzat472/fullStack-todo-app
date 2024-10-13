@@ -51,7 +51,6 @@ const RegisterPage = () => {
                 }, 2000);
             } 
         } catch(error) {
-            // console.log(error.response);
             // ** should declare the type of error (typescript)
             const errorObj = error as AxiosError<IErrorResponse>
             toast.error(`${errorObj.response?.data.error.message}`,
