@@ -1,13 +1,16 @@
-import axiosInstance from '../config/axios.config'
+import { useState } from 'react';
 import useCustomQuery from '../hooks/useAuthenticatedQuery';
 import Button from './ui/Button'
-import { useQuery } from '@tanstack/react-query'
+import Input from './ui/Input';
+import Modal from './ui/Modal';
 
 /* _________________ local Storage _________________ */
 const getUserData = localStorage.getItem("loginUser")
 const userData = getUserData ? JSON.parse(getUserData) : null;
 
 const TodoList = () => {
+    /* _________________ State _________________ */
+    const [isOpenEditModal, setIsOpenEditModal] = useState(false);
     const { isPending, data } = useCustomQuery({
         queryKey: ['todos'], 
         url: "/users/me?populate=todos", 
@@ -18,10 +21,16 @@ const TodoList = () => {
         }
     })   
     
+    /* _________________ Handler _________________ */
+    const openEditModal = () => setIsOpenEditModal(true);
+    const closeEditModal = () => setIsOpenEditModal(false);
+
+    /* _________________ Render _________________ */
     if (isPending) return 'Loading...'
 
     return (
-        <div className="space-y-4">
+        <>
+            <div className="space-y-4">
             {
                 data.todos.length ? (
                     data.todos.map( (todo) => 
@@ -34,6 +43,7 @@ const TodoList = () => {
                                 <Button
                                     variant={"default"}
                                     size={"sm"}
+                                    onClick={openEditModal}
                                 >
                                     Edit
                                 </Button>
@@ -50,7 +60,20 @@ const TodoList = () => {
                     <h3>No Todos Yet</h3>
                 )
             }
-        </div>
+            </div>
+            <Modal close={closeEditModal} isOpen={isOpenEditModal} title='Edit Todo' >
+                <div className="flex items-center space-x-3 mt-4">
+                    <Button
+                        className="bg-indigo-700 hover:bg-indigo-800"
+                    >
+                    Update
+                    </Button>
+                    <Button variant={"cancel"} onClick={closeEditModal}>
+                        Cancel
+                    </Button>
+                </div>
+            </Modal>
+        </>
     )
 }
 
