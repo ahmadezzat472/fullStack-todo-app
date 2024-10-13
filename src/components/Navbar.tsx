@@ -2,6 +2,7 @@ import { NavLink, useLocation } from "react-router-dom";
 import Button from "./ui/Button";
 import toast from "react-hot-toast";
 
+/* _________________ local Storage _________________ */
 const getUserData = localStorage.getItem("loginUser")
 const userData = getUserData ? JSON.parse(getUserData) : null;
 

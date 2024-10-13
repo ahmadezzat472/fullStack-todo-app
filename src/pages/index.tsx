@@ -1,8 +1,8 @@
-import TodoPage from "./Todo"
+import TodoList from "../components/TodoList"
 
 const HomePage = () => {
     return (
-        <TodoPage />
+        <TodoList />
     )
 }
 

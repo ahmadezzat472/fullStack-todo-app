@@ -9,12 +9,11 @@ import RootLayout from "../pages/Layout";
 import ErrorHandler from "../components/errors/ErrorHandler";
 import LoginPage from "../pages/Login";
 import RegisterPage from "../pages/Register";
-import TodoPage from "../pages/Todo";
 
+/* _________________ local Storage _________________ */
 const getUserData = localStorage.getItem("loginUser")
 const userData = getUserData ? JSON.parse(getUserData) : null;
 console.log(userData);
-
 
 const router = createBrowserRouter(
     createRoutesFromElements(
@@ -53,7 +52,7 @@ const router = createBrowserRouter(
                     redirectPath="/login"
                     data={userData}
                     >
-                        <TodoPage />
+                        <h1> todos </h1>
                     </ProtectedRoute>
                 }
                 />
