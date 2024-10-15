@@ -20,6 +20,7 @@ const TodoList = () => {
     const [isOpenEditModal, setIsOpenEditModal] = useState(false);
     const [isOpenDeleteModal, setIsOpenDeleteModal] = useState(false);
     const [isUpdating, setIsUpdating] = useState(false)
+    const [queryKey, setQueryKey] = useState(1)
     const [todoEdit, setTodoEdit] = useState<ITodo>({
         id: 0,
         documentId: "",
@@ -31,9 +32,9 @@ const TodoList = () => {
         description: "",
     })
     const { isPending, data } = useCustomQuery({
-        /* ${todoEdit.id} => when update on item occure => the id of item will change => 
+        /* ${queryKey} => when update on item occure => the id of item will change => 
          thus, queryKey Changes => then useCustomQuery is execute and this we need to get new updated data */
-        queryKey: ['TodoList', `${todoEdit.id}`], 
+        queryKey: ['TodoList', `${queryKey}`], 
         url: "/users/me?populate=todos", 
         config: {
             headers: {
@@ -120,6 +121,7 @@ const TodoList = () => {
                 }
             )
             if(response.status === 200) {
+                setQueryKey(prev => prev + 1)
                 toast.success("updated successfully.",
                     {
                         position: "bottom-center",
@@ -174,6 +176,7 @@ const TodoList = () => {
                 }
             )
             if(response.status === 201) {
+                setQueryKey(prev => prev + 1)
                 toast.success("Add successfully.",
                     {
                         position: "bottom-center",
@@ -215,6 +218,7 @@ const TodoList = () => {
                 }
             })
             if(response.status === 204) {
+                setQueryKey(prev => prev + 1)
                 toast.success("Deleted successfully.",
                     {
                         position: "bottom-center",
@@ -353,7 +357,6 @@ const TodoList = () => {
                 
             </Modal>
         </div>
-
     )
 }
 
