@@ -8,6 +8,7 @@ import Textarea from './ui/Teaxtarea';
 import axiosInstance from '../config/axios.config';
 import toast from 'react-hot-toast';
 import { AxiosError } from 'axios';
+import TodoSkeleton from './ui/TodoSkeleton';
 
 /* _________________ local Storage _________________ */
 const getUserData = localStorage.getItem("loginUser")
@@ -15,11 +16,17 @@ const userData = getUserData ? JSON.parse(getUserData) : null;
 
 const TodoList = () => {
     /* _________________ State _________________ */
+    const [isOpenAddModal, setIsOpenAddModal] = useState(false);
     const [isOpenEditModal, setIsOpenEditModal] = useState(false);
+    const [isOpenDeleteModal, setIsOpenDeleteModal] = useState(false);
     const [isUpdating, setIsUpdating] = useState(false)
     const [todoEdit, setTodoEdit] = useState<ITodo>({
         id: 0,
         documentId: "",
+        title: "",
+        description: "",
+    })
+    const [todoAdd, setTodoAdd] = useState({
         title: "",
         description: "",
     })
@@ -36,6 +43,18 @@ const TodoList = () => {
     })   
     
     /* _________________ Handler _________________ */
+    const openAddModal = () => {
+        setIsOpenAddModal(true);
+    };
+
+    const closeAddModal = () => {
+        setTodoAdd({
+            title: "",
+            description: "",
+        })
+        setIsOpenAddModal(false);
+    };
+
     const openEditModal = (todo: ITodo) => {
         setTodoEdit(todo)
         setIsOpenEditModal(true);
@@ -51,10 +70,33 @@ const TodoList = () => {
         setIsOpenEditModal(false);
     };
 
+    const openDeleteModal = (todo: ITodo) => {
+        setTodoEdit(todo)
+        setIsOpenDeleteModal(true);
+    };
+
+    const closeDeleteModal = () => {
+        setTodoEdit({
+            id: 0,
+            title: "",
+            description: "",
+            documentId: "",
+        })
+        setIsOpenDeleteModal(false);
+    };
+
     const handleOnChange = (evt: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const {name, value} = evt.target;
         setTodoEdit({
             ... todoEdit,
+            [name]: value
+        })
+    };
+
+    const handleOnChangeAdd = (evt: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        const {name, value} = evt.target;
+        setTodoAdd({
+            ... todoAdd,
             [name]: value
         })
     };
@@ -111,12 +153,113 @@ const TodoList = () => {
         }
     }
 
+    const handleSubmitAdd = async(evt: FormEvent<HTMLFormElement>) => {
+        evt.preventDefault()
+        setIsUpdating(true)
+        console.log(todoAdd);
+        
+
+        try {
+            const response = await axiosInstance.post(`todos?user=${userData.user.id}`, 
+                {
+                    data: {
+                        title: todoAdd.title,
+                        description: todoAdd.description
+                    }
+                },
+                {
+                    headers: {
+                        Authorization: `Bearer ${userData.jwt}`,
+                    }
+                }
+            )
+            if(response.status === 201) {
+                toast.success("Add successfully.",
+                    {
+                        position: "bottom-center",
+                        duration: 4000,
+                        style: {
+                            backgroundColor: "black",
+                            color: "white",
+                            width: "fit-content",
+                        },
+                    }
+                );
+            }
+        } catch(error) {
+            console.log(error);
+            // ** should declare the type of error (typescript)
+            const errorObj = error as AxiosError<IErrorResponse>
+            toast.error(`${errorObj.message}`,
+                {
+                    position: "bottom-center",
+                    duration: 4000,
+                    style: {
+                        backgroundColor: "black",
+                        color: "white",
+                        width: "fit-content",
+                    },
+                }
+            );
+        } finally {
+            closeAddModal()
+            setIsUpdating(false)
+        }
+    }
+
+    const handleRemoveTodo = async () => {
+        try {
+            const response = await axiosInstance.delete(`todos/${todoEdit.documentId}`, {
+                headers: {
+                    Authorization: `Bearer ${userData.jwt}`,
+                }
+            })
+            if(response.status === 204) {
+                toast.success("Deleted successfully.",
+                    {
+                        position: "bottom-center",
+                        duration: 4000,
+                        style: {
+                            backgroundColor: "black",
+                            color: "white",
+                            width: "fit-content",
+                        },
+                    }
+                );
+            }
+        } catch(error) {
+            console.log(error);
+            // ** should declare the type of error (typescript)
+            const errorObj = error as AxiosError<IErrorResponse>
+            toast.error(`${errorObj.message}`,
+                {
+                    position: "bottom-center",
+                    duration: 4000,
+                    style: {
+                        backgroundColor: "black",
+                        color: "white",
+                        width: "fit-content",
+                    },
+                }
+            );
+        } finally {
+            closeDeleteModal()
+        }
+    }
+
     /* _________________ Render _________________ */
-    if (isPending) return 'Loading...'
+    if (isPending) return <TodoSkeleton />
 
     return (
-        <>
-            <div className="space-y-4">
+        <div className="space-y-1">
+            <div className="flex w-fit mx-auto my-10 gap-x-2">
+                <Button variant="default" onClick={openAddModal} size={"sm"}>
+                    Post new todo
+                </Button>
+                {/* <Button variant="outline" onClick={} size={"sm"}>
+                    Generate todos
+                </Button> */}
+            </div>
             {
                 data.todos.length ? (
                     data.todos.map( (todo: ITodo) => 
@@ -136,6 +279,7 @@ const TodoList = () => {
                                 <Button
                                     variant={"danger"}
                                     size={"sm"}
+                                    onClick={() => openDeleteModal(todo)}
                                 >
                                     Remove
                                 </Button>
@@ -146,8 +290,10 @@ const TodoList = () => {
                     <h3>No Todos Yet</h3>
                 )
             }
-            </div>
+
+            {/* Modal Edit */}
             <Modal close={closeEditModal} isOpen={isOpenEditModal} title='Edit Todo' >
+
                 <form className='space-y-4' onSubmit={handleSubmit} >
                     <Input name='title' value={todoEdit.title} onChange={handleOnChange} />
                     <Textarea name='description' value={todoEdit.description} onChange={handleOnChange} />
@@ -158,14 +304,56 @@ const TodoList = () => {
                         >
                             Update
                         </Button>
-                        <Button variant={"cancel"} onClick={closeEditModal}>
+                        <Button variant={"cancel"} onClick={closeEditModal} type='button'>
                             Cancel
                         </Button>
                     </div>
                 </form>
                 
             </Modal>
-        </>
+
+            {/* Delete Modal */}
+            <Modal
+                isOpen={isOpenDeleteModal}
+                close={closeDeleteModal}
+                title="Are you sure you want to remove this todo from your store ?"
+                description="Deleting this todo will remove it permenantly from your inventory. Any associated data, sales history, and other related information will also be deleted. Please make sure this is the intended action."
+            >
+                <div className="flex items-center space-x-3 mt-4">
+                    <Button 
+                        variant="danger" 
+                        onClick={handleRemoveTodo}
+                    >
+                        Yes , Remove
+                    </Button>
+                    <Button variant="cancel" type="button" onClick={closeDeleteModal}>
+                        Cancel
+                    </Button>
+                </div>
+            </Modal>
+
+            {/* Add Modal */}
+            <Modal close={closeAddModal} isOpen={isOpenAddModal} title='Add A New Todo' >
+
+                <form className='space-y-4' onSubmit={handleSubmitAdd} >
+                    <Input name='title' value={todoAdd.title} onChange={handleOnChangeAdd} />
+                    <Textarea name='description' value={todoAdd.description} onChange={handleOnChangeAdd} />
+                    <div className="flex items-center space-x-3 mt-4">
+                        <Button
+                            className="bg-indigo-700 hover:bg-indigo-800"
+                            isLoading={isUpdating}
+                        >
+                            Done
+                        </Button>
+                        <Button variant={"cancel"} onClick={closeAddModal} type='button'>
+                            Cancel
+                        </Button>
+                    </div>
+                </form>
+                
+            </Modal>
+        </div>
+
     )
 }
 

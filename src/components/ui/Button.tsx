@@ -39,6 +39,7 @@ interface ButtonProps
         VariantProps<typeof buttonVariants> {
     children: ReactNode;
     isLoading?: boolean
+    type?: "submit" | "button" | "reset";
 }
 
 const Button = ({
@@ -48,10 +49,12 @@ const Button = ({
     className,
     children,
     isLoading,
+    type,
     ...props
 }: ButtonProps) => {
     return (
         <button
+            type={type}
             className={cn(buttonVariants({ variant, size, fullWidth, className }))}
             {...props}
             disabled={isLoading}
