@@ -9,6 +9,7 @@ import axiosInstance from '../config/axios.config';
 import toast from 'react-hot-toast';
 import { AxiosError } from 'axios';
 import TodoSkeleton from './ui/TodoSkeleton';
+import { faker } from '@faker-js/faker';
 
 /* _________________ local Storage _________________ */
 const getUserData = localStorage.getItem("loginUser")
@@ -18,6 +19,7 @@ const TodoList = () => {
     /* _________________ State _________________ */
     const [isOpenAddModal, setIsOpenAddModal] = useState(false);
     const [isOpenEditModal, setIsOpenEditModal] = useState(false);
+    const [isOpenGenerateModal, setIsOpenGenerateModal] = useState(false);
     const [isOpenDeleteModal, setIsOpenDeleteModal] = useState(false);
     const [isUpdating, setIsUpdating] = useState(false)
     const [queryKey, setQueryKey] = useState(1)
@@ -35,7 +37,7 @@ const TodoList = () => {
         /* ${queryKey} => when update on item occure => the id of item will change => 
          thus, queryKey Changes => then useCustomQuery is execute and this we need to get new updated data */
         queryKey: ['TodoList', `${queryKey}`], 
-        url: "/users/me?populate=todos", 
+        url: "/users/me?populate=todos&status=Published", 
         config: {
             headers: {
                 Authorization: `Bearer ${userData.jwt}`
@@ -54,6 +56,14 @@ const TodoList = () => {
             description: "",
         })
         setIsOpenAddModal(false);
+    };
+
+    const openGenerateModal = () => {
+        setIsOpenGenerateModal(true);
+    };
+
+    const closeGenerateModal = () => {
+        setIsOpenGenerateModal(false);
     };
 
     const openEditModal = (todo: ITodo) => {
@@ -102,7 +112,7 @@ const TodoList = () => {
         })
     };
 
-    const handleSubmit = async(evt: FormEvent<HTMLFormElement>) => {
+    const handleSubmitEdit = async(evt: FormEvent<HTMLFormElement>) => {
         evt.preventDefault()
         setIsUpdating(true)
 
@@ -111,7 +121,8 @@ const TodoList = () => {
                 {
                     data: {
                         title: todoEdit.title,
-                        description: todoEdit.description
+                        description: todoEdit.description,
+                        users: [userData.user.id]
                     }
                 },
                 {
@@ -157,16 +168,15 @@ const TodoList = () => {
 
     const handleSubmitAdd = async(evt: FormEvent<HTMLFormElement>) => {
         evt.preventDefault()
-        setIsUpdating(true)
-        console.log(todoAdd);
-        
+        setIsUpdating(true)        
 
         try {
-            const response = await axiosInstance.post(`todos?user=${userData.user.id}`, 
+            const response = await axiosInstance.post(`todos`, 
                 {
                     data: {
                         title: todoAdd.title,
-                        description: todoAdd.description
+                        description: todoAdd.description,
+                        users: [userData.user.id]
                     }
                 },
                 {
@@ -251,6 +261,58 @@ const TodoList = () => {
         }
     }
 
+    const handleGenerateTodos = async () => {
+        setIsUpdating(true)
+        //50 record
+        for (let i = 0; i < 50; i++) {
+            try {
+                const response = await axiosInstance.post(`/todos`,
+                    {
+                        data: {
+                            title: faker.word.words(5),
+                            description: faker.lorem.paragraph(2),
+                            users: [userData.user.id],
+                        },
+                    },
+                    {
+                        headers: {
+                            Authorization: `Bearer ${userData.jwt}`,
+                        },
+                    }
+                );
+                if(response.status === 200) {
+                    setQueryKey(prev => prev + 1)
+                    toast.success("Add 50 todo successfully.",
+                        {
+                            position: "bottom-center",
+                            duration: 4000,
+                            style: {
+                                backgroundColor: "black",
+                                color: "white",
+                                width: "fit-content",
+                            },
+                        }
+                    );
+                }
+            } catch (error) {
+                const errorObj = error as AxiosError<IErrorResponse>
+                toast.error(`${errorObj.message}`,
+                    {
+                        position: "bottom-center",
+                        duration: 4000,
+                        style: {
+                            backgroundColor: "black",
+                            color: "white",
+                            width: "fit-content",
+                        },
+                    }
+                );
+            }
+        }
+        closeGenerateModal()
+        setIsUpdating(false)
+    };
+
     /* _________________ Render _________________ */
     if (isPending) return <TodoSkeleton />
 
@@ -260,10 +322,11 @@ const TodoList = () => {
                 <Button variant="default" onClick={openAddModal} size={"sm"}>
                     Post new todo
                 </Button>
-                {/* <Button variant="outline" onClick={} size={"sm"}>
+                <Button variant="outline" onClick={openGenerateModal} size={"sm"}>
                     Generate todos
-                </Button> */}
+                </Button>
             </div>
+            
             {
                 data.todos.length ? (
                     data.todos.map( (todo: ITodo) => 
@@ -298,7 +361,7 @@ const TodoList = () => {
             {/* Modal Edit */}
             <Modal close={closeEditModal} isOpen={isOpenEditModal} title='Edit Todo' >
 
-                <form className='space-y-4' onSubmit={handleSubmit} >
+                <form className='space-y-4' onSubmit={handleSubmitEdit} >
                     <Input name='title' value={todoEdit.title} onChange={handleOnChange} />
                     <Textarea name='description' value={todoEdit.description} onChange={handleOnChange} />
                     <div className="flex items-center space-x-3 mt-4">
@@ -355,6 +418,26 @@ const TodoList = () => {
                     </div>
                 </form>
                 
+            </Modal>
+
+            {/* Generate Modal */}
+            <Modal
+                isOpen={isOpenGenerateModal}
+                close={closeGenerateModal}
+                title="Are you sure you want to add 50 todos ?"
+            >
+                <div className="flex items-center space-x-3 mt-4">
+                    <Button 
+                        className="bg-indigo-700 hover:bg-indigo-800"
+                        onClick={handleGenerateTodos}
+                        isLoading={isUpdating}
+                    >
+                        Yes , add
+                    </Button>
+                    <Button variant="cancel" type="button" onClick={closeGenerateModal}>
+                        Cancel
+                    </Button>
+                </div>
             </Modal>
         </div>
     )

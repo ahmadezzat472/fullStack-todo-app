@@ -9,6 +9,7 @@ import RootLayout from "../pages/Layout";
 import ErrorHandler from "../components/errors/ErrorHandler";
 import LoginPage from "../pages/Login";
 import RegisterPage from "../pages/Register";
+import TodosPage from "../pages/Todo";
 
 /* _________________ local Storage _________________ */
 const getUserData = localStorage.getItem("loginUser")
@@ -33,28 +34,16 @@ const router = createBrowserRouter(
                     }
                 />
                 <Route
-                    path="/profile"
+                    path="/todos"
                     element={
                         <ProtectedRoute
                             isAllowed={userData}
                             redirectPath="/login"
                             data={userData}
                         >
-                            <h2>Profile page</h2>
+                            <TodosPage />
                         </ProtectedRoute>
                     }
-                />
-                <Route
-                path="/todos"
-                element={
-                    <ProtectedRoute
-                    isAllowed={userData}
-                    redirectPath="/login"
-                    data={userData}
-                    >
-                        <h1> todos </h1>
-                    </ProtectedRoute>
-                }
                 />
                 <Route
                     path="login"

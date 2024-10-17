@@ -39,10 +39,7 @@ const Navbar = () => {
                     userData ? (
                         <div className="flex items-center text-indigo-600 space-x-4">
                             <li className="duration-200 text-lg">
-                            <   NavLink to="/todos">todos</NavLink>
-                            </li>
-                            <li className="text-black duration-200 font-semibold text-lg">
-                                <NavLink to="/profile">Profile</NavLink>
+                                <NavLink to="/todos">todos</NavLink>
                             </li>
                             <Button 
                                 className="bg-indigo-500 text-white p-2 rounded-md cursor-pointer"
